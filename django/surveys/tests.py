@@ -18,3 +18,9 @@ class AnswerModelTest(TestCase):
     def test_string_representation(self):
         answer = Answer(text="My Answer")
         self.assertEqual(str(answer), answer.text)
+
+
+class SurveyChoiceTest(TestCase):
+    def test_string_representation(self):
+        choice = Choice(text="My Choice")
+        self.assertEqual(str(choice), choice.text)

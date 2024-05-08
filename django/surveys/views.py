@@ -1,12 +1,14 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Survey, Question, Answer
 from .forms import AnswerForm
+from rest_framework import viewsets
+from .serializers import QuestionSerializer
 
 
 def survey_list(request):
     # 활성화된 설문들만 조회
     surveys = Survey.objects.filter(is_active=True)
-    return render(request, "surveys/list.html", {"surveys": surveys})
+    return render(request, "surveys/index.html", {"surveys": surveys})
 
 
 def survey_detail(request, survey_id):
@@ -32,8 +34,10 @@ def save_survey_answer(request, question_id):
     return redirect("survey_detail", survey_id=question.survey.pk)
 
 
-from django.shortcuts import render
-
-
 def index(request):
     return render(request, "surveys/index.html")
+
+
+class QuestionViewSet(viewsets.ModelViewSet):
+    queryset = Question.objects.all()
+    serializer_class = QuestionSerializer
