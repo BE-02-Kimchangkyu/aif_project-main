@@ -1,47 +1,30 @@
 from django.db import models
+from django.utils import timezone
 
 
-class Survey(models.Model):
-    title = models.CharField(max_length=200)
-    start_date = models.DateTimeField()
-    end_date = models.DateTimeField()
-    is_active = models.BooleanField(default=True)
+class SurveyQuestion(models.Model):
+    question_content = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "Survey_Question"
 
     def __str__(self):
-        return self.title
+        return self.question_content
 
 
-class Question(models.Model):
+class SurveyAnswer(models.Model):
     survey = models.ForeignKey(
-        Survey, related_name="questions", on_delete=models.CASCADE
+        SurveyQuestion, related_name="answers", on_delete=models.CASCADE
     )
-    text = models.CharField(max_length=255)
-    TYPE_CHOICES = (
-        ("text", "Text"),
-        ("single", "Single Choice"),
-        ("multiple", "Multiple Choice"),
-    )
-    question_type = models.CharField(max_length=10, choices=TYPE_CHOICES)
+    member_id = models.CharField(max_length=100)
+    answer_choice = models.CharField(max_length=100, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "Survey_Answer"
 
     def __str__(self):
-        return self.text
-
-
-class Answer(models.Model):
-    question = models.ForeignKey(
-        Question, related_name="answers", on_delete=models.CASCADE
-    )
-    text = models.TextField()
-
-    def __str__(self):
-        return self.text
-
-
-class Choice(models.Model):
-    question = models.ForeignKey(
-        Question, related_name="choices", on_delete=models.CASCADE
-    )
-    text = models.CharField(max_length=255)
-
-    def __str__(self):
-        return self.text
+        return self.member_id

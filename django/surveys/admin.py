@@ -1,26 +1,15 @@
 from django.contrib import admin
-from .models import Survey, Question, Choice, Answer
+from .models import SurveyQuestion, SurveyAnswer
 
 
-class ChoiceInline(admin.TabularInline):
-    model = Choice
+class SurveyAnswerInline(admin.TabularInline):
+    model = SurveyAnswer
     extra = 7
 
 
-class QuestionInline(admin.TabularInline):
-    model = Question
-    extra = 7
+class SurveyQuestionAdmin(admin.ModelAdmin):
+    inlines = [SurveyAnswerInline]
 
 
-class SurveyAdmin(admin.ModelAdmin):
-    inlines = [QuestionInline]
-
-
-class QuestionAdmin(admin.ModelAdmin):
-    inlines = [ChoiceInline]
-
-
-admin.site.register(Survey, SurveyAdmin)
-admin.site.register(Question, QuestionAdmin)
-admin.site.register(Choice)
-admin.site.register(Answer)
+admin.site.register(SurveyQuestion, SurveyQuestionAdmin)
+admin.site.register(SurveyAnswer)

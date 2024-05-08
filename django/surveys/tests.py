@@ -1,26 +1,24 @@
 from django.test import TestCase
-from .models import Survey, Question, Answer
+from .models import SurveyQuestion, SurveyAnswer
 
 
-class SurveyModelTest(TestCase):
-    def test_string_representation(self):
-        survey = Survey(title="My Survey")
-        self.assertEqual(str(survey), survey.title)
+class SurveyQuestionModelTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        SurveyQuestion.objects.create(question_content="test question")
+
+    def test_question_content_label(self):
+        surveyquestion = SurveyQuestion.objects.get(id=1)
+        field_label = surveyquestion._meta.get_field("question_content").verbose_name
+        self.assertEqual(field_label, "question content")
 
 
-class QuestionModelTest(TestCase):
-    def test_string_representation(self):
-        question = Question(text="My Question")
-        self.assertEqual(str(question), question.text)
+class SurveyAnswerModelTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        SurveyAnswer.objects.create(survey_id=1, member_id=1, answer_choice="A")
 
-
-class AnswerModelTest(TestCase):
-    def test_string_representation(self):
-        answer = Answer(text="My Answer")
-        self.assertEqual(str(answer), answer.text)
-
-
-class SurveyChoiceTest(TestCase):
-    def test_string_representation(self):
-        choice = Choice(text="My Choice")
-        self.assertEqual(str(choice), choice.text)
+    def test_answer_choice_label(self):
+        surveyanswer = SurveyAnswer.objects.get(id=1)
+        field_label = surveyanswer._meta.get_field("answer_choice").verbose_name
+        self.assertEqual(field_label, "answer choice")
