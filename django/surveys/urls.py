@@ -7,6 +7,9 @@ from .views import (
     SurveyQuestionDetail,
     SurveyAnswerList,
     SurveyAnswerDetail,
+    SurveyCheckView,
+    SurveyAnswerManageView,
+    SurveyStatsManageView,
 )
 
 router = DefaultRouter()
@@ -21,4 +24,17 @@ urlpatterns = [
     path("answers/", SurveyAnswerList.as_view(), name="answer_list"),
     path("answers/<int:pk>/", SurveyAnswerDetail.as_view(), name="answer_detail"),
     path("", include(router.urls)),
+    path(
+        "image/<str:member_id>/survey", SurveyCheckView.as_view(), name="survey-check"
+    ),
+    path(
+        "aif/manage/surveyanswer",
+        SurveyAnswerManageView.as_view(),
+        name="survey-answer-manage",
+    ),
+    path(
+        "aif/manage/surveystats",
+        SurveyStatsManageView.as_view(),
+        name="survey-stats-manage",
+    ),
 ]
