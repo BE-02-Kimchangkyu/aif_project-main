@@ -18,7 +18,11 @@ router.register(r"questions", QuestionViewSet)
 urlpatterns = [
     path("", views.SurveyQuestionList.as_view(), name="home"),
     path("survey/<int:pk>/", views.survey_detail, name="survey_detail"),
-    path("answer/<int:pk>/", views.save_survey_answer, name="save_survey_answer"),
+    path(
+        "answer/<int:pk>/",
+        SurveyAnswerDetail.as_view(),
+        name="surveyanswer-detail",
+    ),
     path("questions/", SurveyQuestionList.as_view(), name="question_list"),
     path("questions/<int:pk>/", SurveyQuestionDetail.as_view(), name="question_detail"),
     path("answers/", SurveyAnswerList.as_view(), name="answer_list"),

@@ -1,13 +1,15 @@
 from rest_framework import generics, viewsets
-from .models import SurveyQuestion, SurveyAnswer
-from .serializers import SurveyQuestionSerializer, SurveyAnswerSerializer
-from django.shortcuts import get_object_or_404
+from rest_framework.decorators import api_view
+from rest_framework.parsers import JSONParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
+from django.shortcuts import get_object_or_404
 from django.utils.dateparse import parse_date
 from django.db.models import Q
+from .models import SurveyQuestion, SurveyAnswer
+from .serializers import SurveyQuestionSerializer, SurveyAnswerSerializer
 
 
 class SurveyQuestionList(generics.ListCreateAPIView):
@@ -35,13 +37,15 @@ class QuestionViewSet(viewsets.ModelViewSet):
     serializer_class = SurveyQuestionSerializer
 
 
+@api_view(["POST"])
 def save_survey_answer(request, pk):
     survey = get_object_or_404(SurveyQuestion, pk=pk)
-    # Logic to save survey answer
-    return Response({"message": "Survey answer saved successfully"})
-
-
-from django.http import HttpResponse
+    data = JSONParser().parse(request)
+    serializer = SurveyAnswerSerializer(data=data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response({"message": "Survey answer saved successfully"})
+    return Response(serializer.errors, status=400)
 
 
 def index(request):
@@ -95,13 +99,15 @@ class SurveyStatsManageView(APIView):
             Q(created_at__lte=date_to) if date_to else Q(),
         )
 
-        # TODO: Convert survey_answers to the desired format
+        # Convert survey_answers to the desired format
+        serializer = SurveyAnswerSerializer(survey_answers, many=True)
+        data = serializer.data
 
         return JsonResponse(
             {
                 "success": True,
                 "code": 200,
                 "message": "설문 불러오기 성공",
-                # 'data': data,
+                "data": data,
             }
         )
