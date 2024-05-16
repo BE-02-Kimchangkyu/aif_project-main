@@ -2,29 +2,41 @@ from django.db import models
 from django.utils import timezone
 
 
-class SurveyQuestion(models.Model):
+class Question(models.Model):
     question_content = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = "Survey_Question"
+        db_table = "Question"
 
     def __str__(self):
         return self.question_content
 
 
-class SurveyAnswer(models.Model):
-    survey = models.ForeignKey(
-        SurveyQuestion, related_name="answers", on_delete=models.CASCADE
+class Answer(models.Model):
+    question = models.ForeignKey(
+        Question, related_name="answers", on_delete=models.CASCADE
     )
     member_id = models.CharField(max_length=100)
-    answer_choice = models.CharField(max_length=100, blank=True, null=True)
+    answer_content = models.CharField(max_length=100, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = "Survey_Answer"
+        db_table = "Answer"
+
+    def __str__(self):
+        return self.member_id
+
+
+class User(models.Model):
+    member_id = models.CharField(max_length=100, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "User"
 
     def __str__(self):
         return self.member_id

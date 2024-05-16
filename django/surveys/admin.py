@@ -1,19 +1,24 @@
 from django.contrib import admin
-from .models import SurveyQuestion, SurveyAnswer
+from .models import Question, Answer, User
 
 
-class SurveyAnswerInline(admin.TabularInline):
-    model = SurveyAnswer
-    extra = 7
+class AnswerInline(admin.TabularInline):
+    model = Answer
+    extra = 1
 
 
-class SurveyAnswerAdmin(admin.ModelAdmin):
-    fields = ["survey", "answer_choice", "member_id", "created_at", "updated_at"]
+class AnswerAdmin(admin.ModelAdmin):
+    fields = ["question", "member_id", "answer_content", "created_at", "modified_at"]
 
 
-class SurveyQuestionAdmin(admin.ModelAdmin):
-    inlines = [SurveyAnswerInline]
+class QuestionAdmin(admin.ModelAdmin):
+    inlines = [AnswerInline]
 
 
-admin.site.register(SurveyQuestion, SurveyQuestionAdmin)
-admin.site.register(SurveyAnswer, SurveyAnswerAdmin)
+class UserAdmin(admin.ModelAdmin):
+    fields = ["member_id", "created_at", "modified_at"]
+
+
+admin.site.register(Question, QuestionAdmin)
+admin.site.register(Answer, AnswerAdmin)
+admin.site.register(User, UserAdmin)

@@ -1,14 +1,20 @@
 from django import forms
-from .models import SurveyAnswer, SurveyQuestion
+from .models import Question, Answer, User
 
 
-class SurveyAnswerForm(forms.ModelForm):
+class QuestionForm(forms.ModelForm):
     class Meta:
-        model = SurveyAnswer
+        model = Question
         fields = ["question_content"]
 
 
-class SurveyQuestionForm(forms.ModelForm):
+class AnswerForm(forms.ModelForm):
     class Meta:
-        model = SurveyQuestion
-        fields = ["survey", "member_id", "answer_choice"]
+        model = Answer
+        fields = ["question", "member_id", "answer_content"]
+
+
+class UserForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ["member_id"]

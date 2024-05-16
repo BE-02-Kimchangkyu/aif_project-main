@@ -1,44 +1,29 @@
-from . import views
-from django.urls import path, include
+from django.urls import path
 from rest_framework.routers import DefaultRouter
 from .views import (
-    QuestionViewSet,
-    SurveyQuestionList,
-    SurveyQuestionDetail,
-    SurveyAnswerList,
-    SurveyAnswerDetail,
-    SurveyCheckView,
-    SurveyAnswerManageView,
-    SurveyStatsManageView,
+    Questions,
+    QuestionDetail,
+    Answers,
+    AnswersByUser,
+    AnswersByQuestion,
 )
+from . import views
 
 router = DefaultRouter()
-router.register(r"questions", QuestionViewSet)
 
 urlpatterns = [
-    path("", views.SurveyQuestionList.as_view(), name="home"),
-    path("survey/<int:pk>/", views.survey_detail, name="survey_detail"),
+    path("questions/", Questions.as_view(), name="questions"),
     path(
-        "answer/<int:pk>/",
-        SurveyAnswerDetail.as_view(),
-        name="surveyanswer-detail",
+        "questions/<int:question_id>/", QuestionDetail.as_view(), name="question_detail"
     ),
-    path("questions/", SurveyQuestionList.as_view(), name="question_list"),
-    path("questions/<int:pk>/", SurveyQuestionDetail.as_view(), name="question_detail"),
-    path("answers/", SurveyAnswerList.as_view(), name="answer_list"),
-    path("answers/<int:pk>/", SurveyAnswerDetail.as_view(), name="answer_detail"),
-    path("", include(router.urls)),
+    path("answers/", Answers.as_view(), name="answers"),
     path(
-        "image/<str:member_id>/survey", SurveyCheckView.as_view(), name="survey-check"
+        "answers/user/<int:member_id>/", AnswersByUser.as_view(), name="answers_by_user"
     ),
     path(
-        "aif/manage/surveyanswer",
-        SurveyAnswerManageView.as_view(),
-        name="survey-answer-manage",
+        "answers/question/<int:question_id>/",
+        AnswersByQuestion.as_view(),
+        name="answers_by_question",
     ),
-    path(
-        "aif/manage/surveystats",
-        SurveyStatsManageView.as_view(),
-        name="survey-stats-manage",
-    ),
+    path("", views.surveys_index, name="surveys_index"),
 ]

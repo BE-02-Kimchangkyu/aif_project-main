@@ -1,113 +1,96 @@
-from rest_framework import generics, viewsets
-from rest_framework.decorators import api_view
-from rest_framework.parsers import JSONParser
-from rest_framework.response import Response
+from django.shortcuts import render, get_object_or_404, redirect
+from .models import Question, Answer, User
+from .forms import AnswerForm
+
 from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.exceptions import NotFound
+from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from django.http import JsonResponse, HttpResponse
-from django.shortcuts import get_object_or_404
-from django.utils.dateparse import parse_date
-from django.db.models import Q
-from .models import SurveyQuestion, SurveyAnswer
-from .serializers import SurveyQuestionSerializer, SurveyAnswerSerializer
+from .serializers import QuestionSerializer, AnswerSerializer
 
 
-class SurveyQuestionList(generics.ListCreateAPIView):
-    queryset = SurveyQuestion.objects.all()
-    serializer_class = SurveyQuestionSerializer
+class QuestionMixin:
+    def get_question(self, question_id):
+        return get_object_or_404(Question, pk=question_id)
 
 
-class SurveyQuestionDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = SurveyQuestion.objects.all()
-    serializer_class = SurveyQuestionSerializer
+class Questions(APIView):
+    # permission_classes = [IsAuthenticated]  # 추가: 인증 설정
+
+    def get(self, request):
+        questions = Question.objects.all()
+        serializer = QuestionSerializer(questions, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        serializer = QuestionSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class SurveyAnswerList(generics.ListCreateAPIView):
-    queryset = SurveyAnswer.objects.all()
-    serializer_class = SurveyAnswerSerializer
+class QuestionDetail(QuestionMixin, APIView):
+    def get(self, request, question_id):
+        question = self.get_question(question_id)
+        serializer = QuestionSerializer(question)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request, question_id):
+        question = self.get_question(question_id)
+        serializer = AnswerSerializer(data=request.data)
+        if serializer.is_valid():
+            answer = serializer.save(user=request.user, question=question)
+            serializer = AnswerSerializer(answer)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class SurveyAnswerDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = SurveyAnswer.objects.all()
-    serializer_class = SurveyAnswerSerializer
+class Answers(APIView):
+    def get(self, request):
+        answers = Answer.objects.all()
+        serializer = AnswerSerializer(answers, many=True)
+        return Response(serializer.data)
 
 
-class QuestionViewSet(viewsets.ModelViewSet):
-    queryset = SurveyQuestion.objects.all()
-    serializer_class = SurveyQuestionSerializer
+class AnswersByUser(APIView):
+    def get_answers_by_user(self, member_id):
+        user = get_object_or_404(User, member_id=member_id)
+        return Answer.objects.filter(user=user)
+
+    def get(self, request, member_id):
+        answers = self.get_answers_by_user(member_id)
+        serializer = AnswerSerializer(answers, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-@api_view(["POST"])
-def save_survey_answer(request, pk):
-    survey = get_object_or_404(SurveyQuestion, pk=pk)
-    data = JSONParser().parse(request)
-    serializer = SurveyAnswerSerializer(data=data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response({"message": "Survey answer saved successfully"})
-    return Response(serializer.errors, status=400)
+class AnswersByQuestion(QuestionMixin, APIView):
+    def get_answers_by_question(self, question_id):
+        question = self.get_question(question_id)
+        return Answer.objects.filter(question=question)
+
+    def get(self, request, question_id):
+        answers = self.get_answers_by_question(question_id)
+        serializer = AnswerSerializer(answers, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request, question_id):
+        question = self.get_question(question_id)
+        serializer = AnswerSerializer(data=request.data)
+        if serializer.is_valid():
+            answer = serializer.save(user=request.user, question=question)
+            serializer = AnswerSerializer(answer)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-def index(request):
-    return HttpResponse("Hello, world. You're at the surveys index.")
+from django.http import HttpResponse
 
 
-def survey_detail(request, pk):
-    return HttpResponse("This is the detail view for survey with id %s." % pk)
+def other_view(request):
+    return HttpResponse("Hello, world!")
 
 
-class SurveyCheckView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, member_id, format=None):
-        user = request.user
-        if user.email != member_id:
-            return JsonResponse({"detail": "Unauthorized"}, status=401)
-
-        survey_done = SurveyAnswer.objects.filter(member_id=member_id).exists()
-        return JsonResponse({"survey_done": survey_done})
-
-
-class SurveyAnswerManageView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request, format=None):
-        user = request.user
-        survey_answers = SurveyAnswer.objects.filter(member_id=user.email)
-        answer_list = [
-            {
-                "questionId": answer.survey.question_content,
-                "answer": answer.answer_choice,
-            }
-            for answer in survey_answers
-        ]
-        return JsonResponse({"answer": answer_list})
-
-
-class SurveyStatsManageView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request, format=None):
-        filter_data = request.data.get("filter", {})
-        survey_id = filter_data.get("surveyId", "")
-        date_from = parse_date(filter_data.get("dateFrom", ""))
-        date_to = parse_date(filter_data.get("dateTo", ""))
-
-        survey_answers = SurveyAnswer.objects.filter(
-            Q(survey__id=survey_id) if survey_id else Q(),
-            Q(created_at__gte=date_from) if date_from else Q(),
-            Q(created_at__lte=date_to) if date_to else Q(),
-        )
-
-        # Convert survey_answers to the desired format
-        serializer = SurveyAnswerSerializer(survey_answers, many=True)
-        data = serializer.data
-
-        return JsonResponse(
-            {
-                "success": True,
-                "code": 200,
-                "message": "설문 불러오기 성공",
-                "data": data,
-            }
-        )
+def surveys_index(request):
+    return HttpResponse("Hello, this is the surveys index.")

@@ -1,21 +1,27 @@
 from rest_framework import serializers
-from .models import SurveyQuestion, SurveyAnswer
+from .models import Question, Answer, User
 
 
-class SurveyQuestionSerializer(serializers.ModelSerializer):
+class QuestionSerializer(serializers.ModelSerializer):
     class Meta:
-        model = SurveyQuestion
+        model = Question
         fields = ["id", "question_content", "created_at", "modified_at"]
 
 
-class SurveyAnswerSerializer(serializers.ModelSerializer):
+class AnswerSerializer(serializers.ModelSerializer):
     class Meta:
-        model = SurveyAnswer
+        model = Answer
         fields = [
             "id",
-            "survey",
+            "question",
             "member_id",
-            "answer_choice",
+            "answer_content",
             "created_at",
             "modified_at",
         ]
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["member_id", "created_at", "modified_at"]

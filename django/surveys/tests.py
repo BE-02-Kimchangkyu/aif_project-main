@@ -1,24 +1,47 @@
 from django.test import TestCase
-from .models import SurveyQuestion, SurveyAnswer
+from django.urls import reverse
+from rest_framework.test import APIClient
+from rest_framework import status
+from .models import Question, Answer, User
 
 
-class SurveyQuestionModelTest(TestCase):
+class QuestionModelTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        SurveyQuestion.objects.create(question_content="test question")
+        Question.objects.create(question_content="test question")
 
     def test_question_content_label(self):
-        surveyquestion = SurveyQuestion.objects.get(id=1)
-        field_label = surveyquestion._meta.get_field("question_content").verbose_name
+        question = Question.objects.get(id=1)
+        field_label = question._meta.get_field("question_content").verbose_name
         self.assertEqual(field_label, "question content")
 
 
-class SurveyAnswerModelTest(TestCase):
+class AnswerModelTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        SurveyAnswer.objects.create(survey_id=1, member_id=1, answer_choice="A")
+        user = User.objects.create(member_id="1")
+        question = Question.objects.create(question_content="test question")
+        Answer.objects.create(user=user, question=question, answer_content="A")
 
-    def test_answer_choice_label(self):
-        surveyanswer = SurveyAnswer.objects.get(id=1)
-        field_label = surveyanswer._meta.get_field("answer_choice").verbose_name
-        self.assertEqual(field_label, "answer choice")
+    def test_answer_content_label(self):
+        answer = Answer.objects.get(id=1)
+        field_label = answer._meta.get_field("answer_content").verbose_name
+        self.assertEqual(field_label, "answer content")
+
+
+class QuestionAPITests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+
+    def test_get_questions(self):
+        response = self.client.get(reverse("questions"))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+class AnswerAPITests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+
+    def test_get_answers(self):
+        response = self.client.get(reverse("answers"))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
